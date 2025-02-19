@@ -1,0 +1,51 @@
+name: Deploy Backend to Azure AKS
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-deploy.yml'
+
+env:
+  AZURE_CONTAINER_REGISTRY: your-acr-name
+  AKS_CLUSTER_NAME: todo-cluster
+  AKS_RESOURCE_GROUP: todo-resource-group
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Build and push image to ACR
+      uses: azure/docker-login@v1
+      with:
+        login-server: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+    
+    - run: |
+        cd backend
+        docker build -t ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/todo-backend:${{ github.sha }} .
+        docker push ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/todo-backend:${{ github.sha }}
+
+    - name: Set AKS context
+      uses: azure/aks-set-context@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        resource-group: ${{ env.AKS_RESOURCE_GROUP }}
+        cluster-name: ${{ env.AKS_CLUSTER_NAME }}
+
+    - name: Deploy to AKS
+      run: |
+        cd k8s/backend
+        envsubst < deployment.yaml | kubectl apply -f -
+        kubectl apply -f service.yaml
+        kubectl apply -f ingress.yaml 
