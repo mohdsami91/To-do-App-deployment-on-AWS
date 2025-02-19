@@ -10,7 +10,7 @@ A modern todo application built with React (Frontend) and Express (Backend) usin
 
 1. Clone this project
 ```
-git clone https://github.com/verma-kunal/AWS-Session](https://github.com/mohdsami91/To-do-App-deployment-on-AWS.git
+git clone https://github.com/mohdsami91/To-do-App-deployment-on-AWS.git
 ```
 2. Setup the following environment variables - `(.env)` file
 ```
