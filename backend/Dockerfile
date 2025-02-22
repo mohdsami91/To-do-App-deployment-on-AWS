@@ -16,9 +16,10 @@ FROM node:18-alpine AS production
 
 WORKDIR /app
 COPY package*.json ./
-RUN npm install --production
+RUN npm install
 COPY . .
 RUN npm run build
+RUN npm run db:generate
 
 EXPOSE 3000
 CMD ["sh", "-c", "npm run db:migrate && npm start"]
